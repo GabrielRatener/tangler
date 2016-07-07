@@ -20,5 +20,12 @@
   "bugs": {
     "url": "https://github.com/GabrielRatener/tangler/issues"
   },
-  "homepage": "https://github.com/GabrielRatener/tangler#readme"
+  "homepage": "https://github.com/GabrielRatener/tangler#readme",
+  "dependencies": {
+    "acorn": "^3.2.0",
+    "escodegen": "^1.8.0",
+    "browser-resolve": "^1.11.0",
+    "builtin-modules": "^1.1.0",
+    "resolve": "^1.1.6"
+  }
 }

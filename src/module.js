@@ -1,18 +1,27 @@
 
 export default class Module {
-	constructor(object, exports, defaultValue = null) {
-		this._object = object;
+	constructor(exports, name, object) {
 		this._exports = new Map();
-		this._defaultValue = defaultValue;
 		this._all = {};
+		this._object = object;
+		this._defaultValue = null;
+		this._hasDefault = false;
 
-		this.name = null;		
+		this.name = name;		
 		for (let {local, exported = local, mutable} of exports) {
 			this._exports.set(exported, local);
 			this.addBinding(this._all, exported);
 		}
 	}
 
+	set object(object) {
+		this._object = object;
+	}
+
+	set default(defaultValue) {
+		this._hasDefault = true;
+		this._defaultValue = defaultValue;
+	}
 
 	addBinding(importer, name, alias = name) {
 		if (this._exports.has(name)) {
@@ -33,15 +42,19 @@ export default class Module {
 		}
 	}
 
-	addAllBinding(importer, name) {
+	addNamespaceBinding(importer, name) {
 		importer[name] = this._all;
 	}
-
+ 
 	addDefaultBinding(importer, name) {
 		if (this._defaultValue == null) {
 			throw new Error('No default value to export!');
 		} else {
 			importer[name] = this._defaultValue;
 		}
+	}
+
+	lock() {
+		Object.freeze(this);
 	}
 }
