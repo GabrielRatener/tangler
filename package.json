@@ -27,5 +27,8 @@
     "browser-resolve": "^1.11.0",
     "builtin-modules": "^1.1.0",
     "resolve": "^1.1.6"
+  },
+  "devDependencies": {
+    "cli-color": "^1.1.0"
   }
 }

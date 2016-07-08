@@ -1,7 +1,8 @@
 
-import fs from 'fs';
-import resolve from 'resolve';
-import Module from './module';
+const fs 		= require('fs');
+const path		= require('path');
+const resolve 	= require('resolve');
+const Module 	= require('./module');
 
 function getType(map, id) {
 	if (map.has(id)) {
@@ -11,7 +12,22 @@ function getType(map, id) {
 	}
 }
 
-export default function nodeResolver() {
+function createContext(absPath) {
+	const context = {};
+	for (var key in global) {
+		context[key] = global[key];
+	}
+
+	context.__dirname = path.dirname(absPath);
+	context.__filename = absPath;
+	context.global = context;
+
+	delete context.require;
+
+	return context;
+}
+
+module.exports = function nodeResolver() {
 	const map = new Map();
 
 	return {
@@ -22,7 +38,7 @@ export default function nodeResolver() {
 			} else {
 				let type;
 				let basedir = importer?
-					path.dirname(importerPath) :
+					path.dirname(importer) :
 					process.cwd() ;
 				let absPath = resolve.sync(importee, {
 					basedir,
@@ -48,7 +64,9 @@ export default function nodeResolver() {
 				module.default = require(id);
 				return {module};
 			} else {
-				return {source: fs.readFileSync(id, 'utf8')};
+				const source = fs.readFileSync(id, 'utf8');
+				const context = createContext(id);
+				return {source, context};
 			}
 		}
 	}

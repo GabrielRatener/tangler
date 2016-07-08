@@ -1,9 +1,15 @@
-import defaultResolver from './node-resolver'
+const defaultResolver 			= require('./node-resolver');
+const {getModuleFromId, runId} 	= require('./utils');
 
-export function runId(id, resolver) {
+exports.run = function run(importee, importer = null, resolver = defaultResolver()) {
+	const id = resolver.resolveId(importee, importer);
 
+	return runId(id, resolver);
 }
 
-export function importId(id, resolver) {
+exports.require = function require(importee, importer, resolver = defaultResolver()) {
+	const id 		= resolver.resolveId(importee, importer);
+	const module	= getModuleFromId(id, resolver);
 
+	return module.asCjsModule(true);
 }

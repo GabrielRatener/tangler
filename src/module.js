@@ -1,14 +1,16 @@
+const vm = require('vm');
 
-export default class Module {
-	constructor(exports, name, object) {
+module.exports = class Module {
+	constructor(exports, id, object) {
 		this._exports = new Map();
 		this._all = {};
 		this._object = object;
 		this._defaultValue = null;
 		this._hasDefault = false;
+		this._bindingCache = new Map();
 
-		this.name = name;		
-		for (let {local, exported = local, mutable} of exports) {
+		this.id = id;		
+		for (let {local, exported = local} of exports) {
 			this._exports.set(exported, local);
 			this.addBinding(this._all, exported);
 		}
@@ -24,21 +26,24 @@ export default class Module {
 	}
 
 	addBinding(importer, name, alias = name) {
-		if (this._exports.has(name)) {
+		if (!this._exports.has(name)) {
 			throw new Error(`Module "${this.name}" does not export name "${name}"!`);
 		} else {
-			const mutable 	= this._mutability.get(name);
-			const local 	= this._exports[name];
-			const property 	= {
-				get() {
-					return this._object[local];
-				},
-				set(val) {
-					throw new Error('Cannot modify immutable binding!');
+			const local = this._exports.get(name);
+			if (this._bindingCache.has(local)) {
+				const property = this._bindingCache.get(local);
+				Object.defineProperty(importer, alias, property);
+			} else {
+				const code		= `({get() {return ${local};}})`;
+				const property 	= vm.runInNewContext(code, this._object);
+				property.enumerable = true;
+				property.set = () => {
+					throw new Error('Immutable binding: cannot change value!');
 				}
-			};
 
-			Object.defineProperty(importer, alias, property);
+				this._bindingCache.set(local, property);				
+				Object.defineProperty(importer, alias, property);
+			}
 		}
 	}
 
@@ -47,7 +52,7 @@ export default class Module {
 	}
  
 	addDefaultBinding(importer, name) {
-		if (this._defaultValue == null) {
+		if (!this._hasDefault) {
 			throw new Error('No default value to export!');
 		} else {
 			importer[name] = this._defaultValue;
@@ -56,5 +61,14 @@ export default class Module {
 
 	lock() {
 		Object.freeze(this);
+	}
+
+	asCjsModule(def = false) {
+
+		if (def) {
+			return Object.assign({default: this._defaultValue}, this._all);
+		} else {
+			return Object.assign({}, this._all);
+		}
 	}
 }
