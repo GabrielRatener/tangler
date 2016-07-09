@@ -36,19 +36,21 @@ module.exports = function nodeResolver() {
 				map.set(importee, 'core');
 				return importee;
 			} else {
-				let type;
 				let basedir = importer?
 					path.dirname(importer) :
 					process.cwd() ;
+				let type;
 				let absPath = resolve.sync(importee, {
 					basedir,
 					packageFilter(pkg) {
 						if (pkg.hasOwnProperty('jsnext:main')) {
 							pkg['main'] = pkg['jsnext:main'];
-							type = 'cjs';
-						} else {
 							type = 'es6';
+						} else {
+							type = 'cjs';
 						}
+
+						return pkg;
 					}
 				});
 

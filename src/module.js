@@ -64,7 +64,8 @@ module.exports = class Module {
 	// import defVal from "this module"
 	addDefaultBinding(importer, name) {
 		if (!this._hasDefault) {
-			throw new Error('No default value to export!');
+			throw new Error(
+				`No default value to export '${this.id}' to '${importer.id}'!`);
 		} else {
 			Object.defineProperty(importer, name, {
 				get: () => {

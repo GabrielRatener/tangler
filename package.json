@@ -4,7 +4,7 @@
   "description": "Use ES2015 modules with node today",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "node test.js"
   },
   "repository": {
     "type": "git",
@@ -26,8 +26,8 @@
   "homepage": "https://github.com/GabrielRatener/tangler#readme",
   "dependencies": {
     "acorn": "^3.2.0",
-    "escodegen": "^1.8.0",
-    "resolve": "^1.1.6"
+    "escodegen": "estools/escodegen",
+    "resolve": "^1.1.7"
   },
   "devDependencies": {
     "cli-color": "^1.1.0"
