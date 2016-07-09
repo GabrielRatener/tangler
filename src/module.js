@@ -29,7 +29,7 @@ module.exports = class Module {
 	// import {name as alias} from "this module"
 	addBinding(importer, name, alias = name) {
 		if (!this.hasExport(name)) {
-			throw new Error(`Module '${this.name}' does not export name '${name}'!`);
+			throw new Error(`Module '${this.id}' does not export name '${name}'!`);
 		} else {
 			if (this._relayCache.has(name)) {
 				const {imported, module} = this._relayCache.get(name);
@@ -65,7 +65,7 @@ module.exports = class Module {
 	addDefaultBinding(importer, name) {
 		if (!this._hasDefault) {
 			throw new Error(
-				`No default value to export '${this.id}' to '${importer.id}'!`);
+				`No default value to export in '${this.id}'!`);
 		} else {
 			Object.defineProperty(importer, name, {
 				get: () => {
