@@ -15,6 +15,7 @@ function processProgram(ast) {
 	const exports = [];
 	const imports = new Map();
 	const bodies = [];
+	const relays = new Map();
 
 	let filtered = [];
 	let defaultName = null;
@@ -108,11 +109,37 @@ function processProgram(ast) {
 				}
 				filtered.push(line.declaration);
 			} else {
-				for (let {local, exported} of line.specifiers) {
-					exports.push({
-						local: local.name,
-						exported: exported.name
-					});
+
+				if (line.source) {
+					const source = line.source.value;
+					if (!imports.has(source)) {
+						imports.set(source, []);
+					}
+
+					if (!relays.has(source)) {
+						relays.set(source, {
+							all: false,
+							exportees: []
+						});
+					}
+
+					const relay = relays.get(source);
+					if (relay.all)
+						throw new Error('Already exporting all!');
+
+					for (let {local: imported, exported} of line.specifiers) {
+						relay.exportees.push({
+							imported: imported.name,
+							exported: exported.name
+						});
+					}					
+				} else {
+					for (let {local, exported} of line.specifiers) {
+						exports.push({
+							local: local.name,
+							exported: exported.name
+						});
+					}					
 				}
 			}
 
@@ -120,6 +147,13 @@ function processProgram(ast) {
 		}
 
 		if (line.type === 'ExportAllDeclaration') {
+			const source = line.source.value;
+			if (!imports.has(source)) {
+				imports.set(source, []);
+			}
+
+			relays.set(source, {all: true})
+
 			continue;
 		}
 
@@ -128,7 +162,7 @@ function processProgram(ast) {
 
 	bodies.push(makeProgram(filtered));
 
-	return {exports, imports, bodies, defaultName};
+	return {exports, imports, bodies, relays, defaultName};
 }
 
 function makeStatement(expression) {
@@ -206,7 +240,7 @@ function getModuleFromId(id, resolver) {
 			return load.module;
 		} else {
 			const ast = hoistFunctions(getAST(load));
-			const {exports, imports, bodies, defaultName}
+			const {exports, imports, relays, bodies, defaultName}
 				= processProgram(ast);
 			const ctxt = Object.assign({}, load.context);
 			const module = new Module(exports, id, ctxt);
@@ -217,6 +251,22 @@ function getModuleFromId(id, resolver) {
 			for (let [source, importees] of imports) {
 				const importedId = resolver.resolveId(source, id);
 				const importedModule = getModuleFromId(importedId, resolver);
+
+				// relays, aka
+				// export ... from "some source"
+				// declarations are handled here
+				if (relays.has(source)) {
+					const {all, exportees} = relays.get(source);
+					if (all) {
+						for (let exportName of importedModule.exports()) {
+							module.addExportRelay(importedModule, exportName);
+						}
+					} else {
+						for (let {imported, exported} of exportees) {
+							module.addExportRelay(importedModule, imported, exported);
+						}
+					}
+				}
 
 				for (let {local, imported} of importees) {
 					if (imported === '*') {
@@ -266,12 +316,12 @@ exports.runId = runId;
 function runId(id, resolver) {
 	const load = resolver.load(id, true);
 	const ast = hoistFunctions(getAST(load));
-	const {exports, imports, bodies, defaultName}
+	const {exports, imports, bodies, relays, defaultName}
 		= processProgram(ast);
 	const ctxt = (!!load.context) ? Object.assign({}, load.context) : {};
 
-	if (exports.length > 0 || bodies.length > 1) {
-		throw new Error(`File "${id}" is a module!`);
+	if (exports.length > 0 || relays.length > 0 || bodies.length > 1) {
+		throw new Error(`File "${id}" cannot be a module!`);
 	} else {
 		for (let [source, importees] of imports) {
 			const importedId = resolver.resolveId(source, id);

@@ -11,5 +11,5 @@ exports.require = function require(importee, importer, resolver = defaultResolve
 	const id 		= resolver.resolveId(importee, importer);
 	const module	= getModuleFromId(id, resolver);
 
-	return module.asCjsModule(true);
+	return module.snapshot(true);
 }

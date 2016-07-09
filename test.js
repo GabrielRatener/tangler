@@ -79,18 +79,30 @@ class TestKit {
 	}
 }
 
-for (let testCase of fs.readdirSync('tests')) {
+
+function showError(e) {
+	console.log('');
+	console.log(cc.red(e.stack));
+	console.log('\n\n');
+}
+
+const testCases = fs.readdirSync('tests');
+
+console.log(`Running ${testCases.length} tests ...\n`);
+for (let testCase of testCases) {
 	try {
 		let lib = tangler.require(`./tests/${testCase}/a`, __filename);
 		let name = lib.name();
 		try {
 			var result = lib.test(new TestKit(name));
-			console.log(`${testCase} : ${result?win:fail}`);
+			console.log(`${testCase} : ${result?win:fail}\t(${name})`);
 		} catch (e) {
-			console.log(`${testCase} : ${fail} => ${e.message}`);
+			console.log(`${testCase} : ${fail}\t(${name})`);
+			showError(e);
 		}
 	} catch (e) {
-		console.log(`${testCase} : ${fail} => Loading Error ("${e.message}")`);
+		console.log(`${testCase} : ${fail} => Loading Error`);
+		showError(e);
 	}
 }
 
