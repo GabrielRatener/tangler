@@ -220,7 +220,7 @@ function hoistFunctions(program) {
 // get ast from loaded id (if applicable)
 function getAST(load) {
 	if (load.ast) {
-		return ast;
+		return load.ast;
 	} else {
 		if (load.source) {
 			return parse(load.source, parseOpts);
@@ -287,18 +287,18 @@ function getModuleFromId(id, resolver) {
 			// if module has no default export
 			if (bodies.length === 1) {
 				const code = generate(bodies[0]);
-				vm.runInNewContext(code, ctxt);
+				vm.runInNewContext(code, ctxt, id);
 
 			// if module has a default export (length === 3)
 			} else {
 				const codes = bodies.map(ast => generate(ast));
-				vm.runInNewContext(codes[0], ctxt);
-				defaultValue = vm.runInNewContext(codes[1], ctxt);
+				vm.runInNewContext(codes[0], ctxt, id);
+				defaultValue = vm.runInNewContext(codes[1], ctxt, id);
 				if (defaultName) {
-					defaultValue = vm.runInNewContext(defaultName, ctxt);
+					defaultValue = vm.runInNewContext(defaultName, ctxt, id);
 				}
 
-				vm.runInNewContext(codes[2], ctxt);
+				vm.runInNewContext(codes[2], ctxt, id);
 				module.default = defaultValue;
 			}
 
@@ -343,6 +343,6 @@ function runId(id, resolver) {
 			}
 		}
 
-		return vm.runInNewContext(generate(bodies[0]), ctxt);
+		return vm.runInNewContext(generate(bodies[0]), ctxt, id);
 	}
 }
