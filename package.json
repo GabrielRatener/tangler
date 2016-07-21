@@ -1,6 +1,6 @@
 {
   "name": "tangler",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "Use ES2015 modules with node today",
   "main": "./src/index.js",
   "scripts": {
