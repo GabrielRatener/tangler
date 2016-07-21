@@ -1,13 +1,14 @@
 const vm = require('vm');
 
 module.exports = class Module {
-	constructor(exports, id, object) {
+	constructor(exports, id, object, virtual = false) {
 		this._exports 		= new Map();
 		this._object 		= object;
 		this._defaultValue 	= null;
 		this._hasDefault 	= false;
 		this._bindingCache 	= new Map();
 		this._relayCache 	= new Map();
+		this._virtual		= virtual;
 
 		this.id = id;		
 		for (let {local, exported = local} of exports) {
@@ -36,15 +37,28 @@ module.exports = class Module {
 				module.addBinding(importer, imported, alias);
 			} else {
 				const local = this._exports.get(name);
+				let property;
 				if (this._bindingCache.has(local)) {
 					const property = this._bindingCache.get(local);
 					Object.defineProperty(importer, alias, property);
 				} else {
-					const code		= `({get() {return ${local};}})`;
-					const property 	= vm.runInNewContext(code, this._object);
-					property.enumerable = true;
-					property.set = () => {
-						throw new Error('Immutable binding: cannot change value!');
+					if (!this._virtual) {
+						const code = `({get() {return ${local};}})`;
+						property = vm.runInNewContext(code, this._object);
+						property.enumerable = true;
+						property.set = () => {
+							throw new Error('Immutable binding: cannot change value!');
+						}
+					} else {
+						property = {
+							get: () => {
+								return this._object[local];
+							},
+							enumerable: true,
+							set() {
+								throw new Error('Immutable binding: cannot change value!');
+							}
+						}
 					}
 
 					this._bindingCache.set(local, property);				

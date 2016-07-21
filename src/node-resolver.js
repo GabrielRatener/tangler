@@ -62,8 +62,21 @@ module.exports = function nodeResolver() {
 		load(id) {
 			const type = map.get(id);
 			if (type === 'core' || type === 'cjs') {
-				const module = new Module([], id);
-				module.default = require(id);
+				const nodeModule = require(id);
+				const exports = [];
+				let module;
+
+				for (let key in nodeModule) {
+					if (nodeModule.hasOwnProperty(key)) {
+						exports.push({
+							local: key,
+							exported: key
+						});
+					}
+				}
+				
+				module = new Module(exports, id, nodeModule, true);
+				module.default = nodeModule;
 				return {module};
 			} else {
 				const source = fs.readFileSync(id, 'utf8');
