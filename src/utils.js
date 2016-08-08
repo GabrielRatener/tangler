@@ -287,18 +287,20 @@ function getModuleFromId(id, resolver) {
 			// if module has no default export
 			if (bodies.length === 1) {
 				const code = generate(bodies[0]);
-				vm.runInNewContext(code, ctxt, id);
+				vm.runInNewContext(code, ctxt, {filename: id});
 
 			// if module has a default export (length === 3)
 			} else {
 				const codes = bodies.map(ast => generate(ast));
-				vm.runInNewContext(codes[0], ctxt, id);
-				defaultValue = vm.runInNewContext(codes[1], ctxt, id);
+				vm.runInNewContext(codes[0], ctxt, {filename: id});
+				defaultValue = vm.runInNewContext(
+					codes[1], ctxt, {filename: id});
 				if (defaultName) {
-					defaultValue = vm.runInNewContext(defaultName, ctxt, id);
+					defaultValue = vm.runInNewContext(
+						defaultName, ctxt, {filename: id});
 				}
 
-				vm.runInNewContext(codes[2], ctxt, id);
+				vm.runInNewContext(codes[2], ctxt, {filename: id});
 				module.default = defaultValue;
 			}
 
@@ -343,6 +345,6 @@ function runId(id, resolver) {
 			}
 		}
 
-		return vm.runInNewContext(generate(bodies[0]), ctxt, id);
+		return vm.runInNewContext(generate(bodies[0]), ctxt, {filename: id});
 	}
 }
