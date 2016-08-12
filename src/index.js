@@ -1,5 +1,5 @@
-const defaultResolver 			= require('./node-resolver');
-const {getModuleFromId, runId} 	= require('./utils');
+const defaultResolver 						= require('./node-resolver');
+const {getModuleFromId, runId, sourceCache} = require('./utils');
 
 exports.run = function run(importee, importer = null,
 		{resolver = defaultResolver()} = {}) {
@@ -15,3 +15,7 @@ exports.require = function require(importee, importer = null,
 
 	return module.snapshot(true);
 }
+
+exports.transformStack = require('./transform-stack')
+	.bind(null, sourceCache);
+

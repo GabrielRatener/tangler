@@ -81,7 +81,7 @@ module.exports = function nodeResolver() {
 			} else {
 				const source = fs.readFileSync(id, 'utf8');
 				const context = createContext(id);
-				return {source, context};
+				return {source, context, sourceFile: id};
 			}
 		}
 	}

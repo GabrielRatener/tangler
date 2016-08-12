@@ -28,7 +28,8 @@
     "acorn": "^3.2.0",
     "bizubee-compiler": "^0.2.3",
     "escodegen": "estools/escodegen",
-    "resolve": "^1.1.7"
+    "resolve": "^1.1.7",
+    "source-map": "^0.5.6"
   },
   "devDependencies": {
     "cli-color": "^1.1.0"

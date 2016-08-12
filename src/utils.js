@@ -8,8 +8,16 @@ const moduleCache = new Map();
 
 const parseOpts = {
 	sourceType: 'module',
-	ecmaVersion: 6
+	ecmaVersion: 6,
+	locations: true
 };
+
+const genOpts = {
+	sourceMap: true,
+	sourceMapWithCode: true
+};
+
+const sourceCache = new Map();
 
 function processProgram(ast) {
 	const exports = [];
@@ -219,11 +227,13 @@ function hoistFunctions(program) {
 
 // get ast from loaded id (if applicable)
 function getAST(load) {
+
 	if (load.ast) {
 		return load.ast;
 	} else {
 		if (load.source) {
-			return parse(load.source, parseOpts);
+			const opts = Object.assign({sourceFile: load.sourceFile}, parseOpts);
+			return parse(load.source, opts);
 		} else {
 			throw new Error('Cannot get AST!');
 		}
@@ -286,21 +296,27 @@ function getModuleFromId(id, resolver) {
 
 			// if module has no default export
 			if (bodies.length === 1) {
-				const code = generate(bodies[0]);
-				vm.runInNewContext(code, ctxt, {filename: id});
+				const {code, map} = generate(bodies[0], genOpts);
+				const filename = `${id}+0`;
+				sourceCache.set(filename, {code, map});
+				vm.runInNewContext(code, ctxt, {filename});
 
 			// if module has a default export (length === 3)
 			} else {
-				const codes = bodies.map(ast => generate(ast));
-				vm.runInNewContext(codes[0], ctxt, {filename: id});
+				const tuples = bodies.map(ast => generate(ast, genOpts));
+				const codes = tuples.map(({code}) => code);
+				tuples.forEach((tuple, i) => {
+					sourceCache.set(`${id}-${i}`, tuple);
+				});
+				vm.runInNewContext(codes[0], ctxt, {filename: `${id}+0`});
 				defaultValue = vm.runInNewContext(
-					codes[1], ctxt, {filename: id});
+					codes[1], ctxt, {filename: `${id}+1`});
 				if (defaultName) {
 					defaultValue = vm.runInNewContext(
-						defaultName, ctxt, {filename: id});
+						defaultName, ctxt, {filename: `${id}+1`});
 				}
 
-				vm.runInNewContext(codes[2], ctxt, {filename: id});
+				vm.runInNewContext(codes[2], ctxt, {filename: `${id}+2`});
 				module.default = defaultValue;
 			}
 
@@ -325,6 +341,8 @@ function runId(id, resolver) {
 	if (exports.length > 0 || relays.length > 0 || bodies.length > 1) {
 		throw new Error(`File "${id}" cannot be a module!`);
 	} else {
+		const {code, map} = generate(bodies[0], genOpts);
+		sourceCache.set(`${id}+0`, {code, map});
 		for (let [source, importees] of imports) {
 			const importedId = resolver.resolveId(source, id);
 			const importedModule = getModuleFromId(importedId, resolver);
@@ -345,6 +363,8 @@ function runId(id, resolver) {
 			}
 		}
 
-		return vm.runInNewContext(generate(bodies[0]), ctxt, {filename: id});
+		return vm.runInNewContext(code, ctxt, {filename: `${id}+0`});
 	}
 }
+
+exports.sourceCache = sourceCache;
