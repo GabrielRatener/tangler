@@ -3,6 +3,7 @@ const fs 		= require('fs');
 const path		= require('path');
 const resolve 	= require('resolve');
 const Module 	= require('./module');
+const package 	= require('../package.json');
 
 function getType(map, id) {
 	if (map.has(id)) {
@@ -12,7 +13,7 @@ function getType(map, id) {
 	}
 }
 
-function createContext(absPath) {
+function createContext(absPath, resolver) {
 	const context = {};
 	for (var key in global) {
 		context[key] = global[key];
@@ -21,8 +22,18 @@ function createContext(absPath) {
 	context.__dirname = path.dirname(absPath);
 	context.__filename = absPath;
 	context.global = context;
-
-	delete context.require;
+	context.tangler = {
+		version: package.version,
+		resolve(importee) {
+			return resolver.resolveId(importee, absPath);
+		},
+		log(...args) {
+			console.log(...args);
+		},
+		err(...args) {
+			console.err(...args);
+		}
+	}
 
 	return context;
 }
@@ -80,7 +91,7 @@ module.exports = function nodeResolver() {
 				return {module};
 			} else {
 				const source = fs.readFileSync(id, 'utf8');
-				const context = createContext(id);
+				const context = createContext(id, this);
 				return {source, context, sourceFile: id};
 			}
 		}
