@@ -42,7 +42,16 @@ module.exports = class Module {
 					const property = this._bindingCache.get(local);
 					Object.defineProperty(importer, alias, property);
 				} else {
-					if (!this._virtual) {
+					if (name === 'default') {
+						property = {
+							get: () => {
+								return this._defaultValue;
+							},
+							set() {
+								throw new Error('Immutable default binding: cannot change value!');
+							}
+						}
+					} else if (!this._virtual) {
 						const code = `({get() {return ${local};}})`;
 						property = vm.runInNewContext(code, this._object);
 						property.enumerable = true;
@@ -93,7 +102,10 @@ module.exports = class Module {
 	}
 
 	hasExport(name) {
-		return this._exports.has(name) || this._relayCache.has(name);
+		if (name === 'default')
+			return this._hasDefault;
+		else
+			return this._exports.has(name) || this._relayCache.has(name);
 	}
 
 	// get all exports (local and relayed)
@@ -107,7 +119,7 @@ module.exports = class Module {
 		}
 	}
 
-	// returns object with all exports as properties (except for default)
+	// returns object with all exports as properties
 	snapshot(def = false) {
 		const obj = {};
 		for (let exported of this.exports()) {

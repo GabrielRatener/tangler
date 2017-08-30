@@ -34,7 +34,7 @@ function createContext(absPath, resolver) {
 			console.err(...args);
 		}
 	}
-
+	
 	return context;
 }
 

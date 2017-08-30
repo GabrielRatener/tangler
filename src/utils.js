@@ -175,7 +175,7 @@ function processProgram(ast) {
 
 function makeStatement(expression) {
 	return {
-		type		: 'ExpressionStatement',
+		type: 'ExpressionStatement',
 		expression
 	}
 }
