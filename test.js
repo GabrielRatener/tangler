@@ -86,7 +86,12 @@ function showError(e) {
 	console.log('\n\n');
 }
 
-const testCases = fs.readdirSync('tests');
+const testCases =
+  fs
+	.readdirSync('tests')
+	.filter(file => /[0-9]+/.test(file))
+	.map(file => parseInt(file))
+	.sort((a, b) => a - b);
 
 console.log(`Running ${testCases.length} tests ...\n`);
 for (let testCase of testCases) {

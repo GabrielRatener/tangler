@@ -1,4 +1,5 @@
-const {parse} 		= require('acorn');
+const acorn 		= require('acorn');
+const asyncPlugin	= require('acorn-es7-plugin');
 const {generate} 	= require('escodegen');
 const vm 			= require('vm');
 const Module 		= require('./module');
@@ -7,8 +8,11 @@ const extractVars	= require('./extract-vars');
 const moduleCache = new Map();
 
 const parseOpts = {
+	plugins: {
+		asyncawait: true
+	},
 	sourceType: 'module',
-	ecmaVersion: 6,
+	ecmaVersion: 7,
 	locations: true
 };
 
@@ -233,7 +237,7 @@ function getAST(load) {
 	} else {
 		if (load.source) {
 			const opts = Object.assign({sourceFile: load.sourceFile}, parseOpts);
-			return parse(load.source, opts);
+			return acorn.parse(load.source, opts);
 		} else {
 			throw new Error('Cannot get AST!');
 		}
@@ -368,3 +372,5 @@ function runId(id, resolver) {
 }
 
 exports.sourceCache = sourceCache;
+
+asyncPlugin(acorn);

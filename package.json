@@ -1,6 +1,6 @@
 {
   "name": "tangler",
-  "version": "0.2.2",
+  "version": "0.2.3",
   "description": "Use ES2015 modules with node today",
   "main": "./src/index.js",
   "scripts": {
@@ -25,7 +25,8 @@
   },
   "homepage": "https://github.com/GabrielRatener/tangler#readme",
   "dependencies": {
-    "acorn": "^3.2.0",
+    "acorn": "^3.3.0",
+    "acorn-es7-plugin": "^1.1.7",
     "bizubee-compiler": "^0.2.3",
     "escodegen": "estools/escodegen",
     "resolve": "^1.1.7",
